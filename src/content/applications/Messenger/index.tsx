@@ -8,8 +8,6 @@ import SidebarContent from './SidebarContent';
 import ChatContent from './ChatContent';
 import MenuTwoToneIcon from '@mui/icons-material/MenuTwoTone';
 
-import Scrollbar from 'src/components/Scrollbar';
-
 import {
   Box,
   styled,
@@ -18,6 +16,7 @@ import {
   IconButton,
   useTheme
 } from '@mui/material';
+import Scrollbar from '../../../components/Scrollbar';
 
 const RootWrapper = styled(Box)(
   ({ theme }) => `

@@ -1,6 +1,4 @@
 import { useContext } from 'react';
-import Scrollbar from 'src/components/Scrollbar';
-import { SidebarContext } from 'src/contexts/SidebarContext';
 
 import {
   Box,
@@ -16,7 +14,9 @@ import {
 } from '@mui/material';
 
 import SidebarMenu from './SidebarMenu';
-import Logo from 'src/components/LogoSign';
+import { SidebarContext } from '../../../contexts/SidebarContext';
+import Scrollbar from '../../../components/Scrollbar';
+import Logo from '../../../components/LogoSign';
 
 const SidebarWrapper = styled(Box)(
   ({ theme }) => `
@@ -37,6 +37,7 @@ function Sidebar() {
 
   return (
     <>
+   
       <SidebarWrapper
         sx={{
           display: {
@@ -54,44 +55,20 @@ function Sidebar() {
             theme.palette.mode === 'dark' ? theme.sidebar.boxShadow : 'none'
         }}
       >
-        <Scrollbar>
           <Box mt={3}>
             <Box
-              mx={2}
+              mx={5}
               sx={{
-                width: 52
+                width: 52,
               }}
             >
               <Logo />
             </Box>
           </Box>
-          <Divider
-            sx={{
-              mt: theme.spacing(3),
-              mx: theme.spacing(2),
-              background: theme.colors.alpha.trueWhite[10]
-            }}
-          />
+        <Scrollbar>
           <SidebarMenu />
         </Scrollbar>
-        <Divider
-          sx={{
-            background: theme.colors.alpha.trueWhite[10]
-          }}
-        />
-        <Box p={2}>
-          <Button
-            href="https://bloomui.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="contained"
-            color="warning"
-            size="small"
-            fullWidth
-          >
-            Upgrade to PRO
-          </Button>
-        </Box>
+        
       </SidebarWrapper>
       <Drawer
         sx={{

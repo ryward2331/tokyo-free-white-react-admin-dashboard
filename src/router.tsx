@@ -1,11 +1,15 @@
 import { Suspense, lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { RouteObject } from 'react-router';
+import React from 'react';
+import SidebarLayout from './layouts/SidebarLayout';
+import BaseLayout from './layouts/BaseLayout';
 
-import SidebarLayout from 'src/layouts/SidebarLayout';
-import BaseLayout from 'src/layouts/BaseLayout';
-
-import SuspenseLoader from 'src/components/SuspenseLoader';
+import SuspenseLoader from './components/SuspenseLoader';
+import Login from './content/pages/Components/Login';
+import Index from './content/pages/Components/Index';
+import SignUp from './content/pages/Components/SignUp/signUp';
+import OTP from './content/pages/Components/OTP/OTP';
 
 const Loader = (Component) => (props) =>
   (
@@ -16,64 +20,64 @@ const Loader = (Component) => (props) =>
 
 // Pages
 
-const Overview = Loader(lazy(() => import('src/content/overview')));
+const Overview = Loader(lazy(() => import('./content/overview')));
 
 // Dashboards
 
-const Crypto = Loader(lazy(() => import('src/content/dashboards/Crypto')));
+const Crypto = Loader(lazy(() => import('./content/dashboards/Crypto')));
 
 // Applications
 
 const Messenger = Loader(
-  lazy(() => import('src/content/applications/Messenger'))
+  lazy(() => import('./content/applications/Messenger'))
 );
 const Transactions = Loader(
-  lazy(() => import('src/content/applications/Transactions'))
+  lazy(() => import('./content/applications/Transactions'))
 );
 const UserProfile = Loader(
-  lazy(() => import('src/content/applications/Users/profile'))
+  lazy(() => import('./content/applications/Users/profile'))
 );
 const UserSettings = Loader(
-  lazy(() => import('src/content/applications/Users/settings'))
+  lazy(() => import('./content/applications/Users/settings'))
 );
 
 // Components
 
 const Buttons = Loader(
-  lazy(() => import('src/content/pages/Components/Buttons'))
+  lazy(() => import('./content/pages/Components/Buttons'))
 );
 const Modals = Loader(
-  lazy(() => import('src/content/pages/Components/Modals'))
+  lazy(() => import('./content/pages/Components/Modals'))
 );
 const Accordions = Loader(
-  lazy(() => import('src/content/pages/Components/Accordions'))
+  lazy(() => import('./content/pages/Components/Accordions'))
 );
-const Tabs = Loader(lazy(() => import('src/content/pages/Components/Tabs')));
+const Tabs = Loader(lazy(() => import('./content/pages/Components/Tabs')));
 const Badges = Loader(
-  lazy(() => import('src/content/pages/Components/Badges'))
+  lazy(() => import('./content/pages/Components/Badges'))
 );
 const Tooltips = Loader(
-  lazy(() => import('src/content/pages/Components/Tooltips'))
+  lazy(() => import('./content/pages/Components/Tooltips'))
 );
 const Avatars = Loader(
-  lazy(() => import('src/content/pages/Components/Avatars'))
+  lazy(() => import('./content/pages/Components/Avatars'))
 );
-const Cards = Loader(lazy(() => import('src/content/pages/Components/Cards')));
-const Forms = Loader(lazy(() => import('src/content/pages/Components/Forms')));
+const Cards = Loader(lazy(() => import('./content/pages/Components/Cards')));
+const Forms = Loader(lazy(() => import('./content/pages/Components/Login')));
 
 // Status
 
 const Status404 = Loader(
-  lazy(() => import('src/content/pages/Status/Status404'))
+  lazy(() => import('./content/pages/Status/Status404'))
 );
 const Status500 = Loader(
-  lazy(() => import('src/content/pages/Status/Status500'))
+  lazy(() => import('./content/pages/Status/Status500'))
 );
 const StatusComingSoon = Loader(
-  lazy(() => import('src/content/pages/Status/ComingSoon'))
+  lazy(() => import('./content/pages/Status/ComingSoon'))
 );
 const StatusMaintenance = Loader(
-  lazy(() => import('src/content/pages/Status/Maintenance'))
+  lazy(() => import('./content/pages/Status/Maintenance'))
 );
 
 const routes: RouteObject[] = [
@@ -83,7 +87,19 @@ const routes: RouteObject[] = [
     children: [
       {
         path: '/',
-        element: <Overview />
+        element: <Index />
+      },
+      {
+        path: '/login',
+        element: <Login />
+      },
+      {
+        path: '/signup',
+        element: <SignUp />
+      },
+      {
+        path: '/otp',
+        element: <OTP />
       },
       {
         path: 'overview',

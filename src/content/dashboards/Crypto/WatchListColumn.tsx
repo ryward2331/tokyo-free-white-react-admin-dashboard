@@ -8,11 +8,11 @@ import {
   useTheme,
   styled
 } from '@mui/material';
-import Label from 'src/components/Label';
-import Text from 'src/components/Text';
+
 import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
-
+import Label from '../../../components/Label';
+import Text from '../../../components/Text';
 const AvatarWrapper = styled(Avatar)(
   ({ theme }) => `
     margin: ${theme.spacing(0, 0, 1, -0.5)};

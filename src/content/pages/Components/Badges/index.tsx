@@ -1,6 +1,4 @@
 import { Helmet } from 'react-helmet-async';
-import PageTitle from 'src/components/PageTitle';
-import PageTitleWrapper from 'src/components/PageTitleWrapper';
 import {
   Container,
   Grid,
@@ -10,7 +8,6 @@ import {
   Divider
 } from '@mui/material';
 import { useState } from 'react';
-import Footer from 'src/components/Footer';
 
 import ButtonGroup from '@mui/material/ButtonGroup';
 import Button from '@mui/material/Button';
@@ -23,6 +20,9 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
+import PageTitleWrapper from '../../../../components/PageTitleWrapper';
+import PageTitle from '../../../../components/PageTitle';
+import Footer from '../../../../components/Footer';
 
 const shapeStyles = { bgcolor: 'primary.main', width: 40, height: 40 };
 const shapeCircleStyles = { borderRadius: '50%' };

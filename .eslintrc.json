@@ -49,6 +49,7 @@
     "import/no-extraneous-dependencies": "off",
     "react/no-unescaped-entities": "off",
     "react/forbid-prop-types": "off",
+    "no-unused-expressions":0,
     "react/jsx-max-props-per-line": [
       1,
       {
@@ -56,6 +57,8 @@
         "when": "multiline"
       }
     ],
+    "default-param-last": "off",
+    "@typescript-eslint/default-param-last": "warn",
     "indent": "off",
     "@typescript-eslint/indent": [0],
     "no-use-before-define": "off",

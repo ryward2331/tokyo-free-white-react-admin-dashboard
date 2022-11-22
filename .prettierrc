@@ -1,4 +1,6 @@
 {
+  
+  "default-param-last": 0,
   "bracketSpacing": true,
   "printWidth": 80,
   "singleQuote": true,

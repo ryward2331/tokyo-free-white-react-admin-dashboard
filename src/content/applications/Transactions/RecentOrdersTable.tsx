@@ -1,366 +1,323 @@
-import { FC, ChangeEvent, useState } from 'react';
-import { format } from 'date-fns';
-import numeral from 'numeral';
-import PropTypes from 'prop-types';
+import { useState,useEffect, useRef, useCallback } from 'react';
 import {
-  Tooltip,
-  Divider,
   Box,
-  FormControl,
-  InputLabel,
-  Card,
-  Checkbox,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TableContainer,
+  Grid,
+  TextField,
+  Button,
   Select,
   MenuItem,
-  Typography,
-  useTheme,
-  CardHeader
+  FormControl
 } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { RootStore, useTypedDispatch } from '../../../Services/Store';
+import CustomTable from '../../../Hooks/CustomTable';
+import { editStocks } from '../../../Interface/Stocks/StocksInterface';
+import { AddCircleOutline, Title } from '@mui/icons-material';
+import CustomDialog from '../../../Hooks/CustomDialog';
+import { AddProductModel, EditProductModel, GetListTypeofProduct, GetStockbyBusinessModel } from '../../../Services/Models/Stocks/StocksModel';
+import { AddNewProduct, EditProduct } from '../../../Services/API/Stocks/Stocks';
+import { fetchStocksByBusiness } from '../../../Services/Actions/Stocks/StocksActions';
+import EditIcon from '@mui/icons-material/Edit';
+import InputLabel from '@mui/material/InputLabel';
+import { setAlertMessage } from '../../../Services/Actions/Constant/ConstantActions';
+import { GetAlertModel } from '../../../Services/Models/Constant/ConstantModel';
 
-import Label from 'src/components/Label';
-import { CryptoOrder, CryptoOrderStatus } from 'src/models/crypto_order';
-import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
-import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
-import BulkActions from './BulkActions';
+const RecentOrdersTable = ({addStock,closeModal}) => {
 
-interface RecentOrdersTableProps {
-  className?: string;
-  cryptoOrders: CryptoOrder[];
-}
-
-interface Filters {
-  status?: CryptoOrderStatus;
-}
-
-const getStatusLabel = (cryptoOrderStatus: CryptoOrderStatus): JSX.Element => {
-  const map = {
-    failed: {
-      text: 'Failed',
-      color: 'error'
-    },
-    completed: {
-      text: 'Completed',
-      color: 'success'
-    },
-    pending: {
-      text: 'Pending',
-      color: 'warning'
-    }
-  };
-
-  const { text, color }: any = map[cryptoOrderStatus];
-
-  return <Label color={color}>{text}</Label>;
-};
-
-const applyFilters = (
-  cryptoOrders: CryptoOrder[],
-  filters: Filters
-): CryptoOrder[] => {
-  return cryptoOrders.filter((cryptoOrder) => {
-    let matches = true;
-
-    if (filters.status && cryptoOrder.status !== filters.status) {
-      matches = false;
-    }
-
-    return matches;
-  });
-};
-
-const applyPagination = (
-  cryptoOrders: CryptoOrder[],
-  page: number,
-  limit: number
-): CryptoOrder[] => {
-  return cryptoOrders.slice(page * limit, page * limit + limit);
-};
-
-const RecentOrdersTable: FC<RecentOrdersTableProps> = ({ cryptoOrders }) => {
-  const [selectedCryptoOrders, setSelectedCryptoOrders] = useState<string[]>(
-    []
+  const stocks_by_business_table = useSelector(
+    (store: RootStore) => store.StockReducers.fetch_stocks_by_business
   );
-  const selectedBulkActions = selectedCryptoOrders.length > 0;
-  const [page, setPage] = useState<number>(0);
-  const [limit, setLimit] = useState<number>(5);
-  const [filters, setFilters] = useState<Filters>({
-    status: null
-  });
-
-  const statusOptions = [
-    {
-      id: 'all',
-      name: 'All'
-    },
-    {
-      id: 'completed',
-      name: 'Completed'
-    },
-    {
-      id: 'pending',
-      name: 'Pending'
-    },
-    {
-      id: 'failed',
-      name: 'Failed'
-    }
-  ];
-
-  const handleStatusChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    let value = null;
-
-    if (e.target.value !== 'all') {
-      value = e.target.value;
-    }
-
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      status: value
-    }));
-  };
-
-  const handleSelectAllCryptoOrders = (
-    event: ChangeEvent<HTMLInputElement>
-  ): void => {
-    setSelectedCryptoOrders(
-      event.target.checked
-        ? cryptoOrders.map((cryptoOrder) => cryptoOrder.id)
-        : []
-    );
-  };
-
-  const handleSelectOneCryptoOrder = (
-    event: ChangeEvent<HTMLInputElement>,
-    cryptoOrderId: string
-  ): void => {
-    if (!selectedCryptoOrders.includes(cryptoOrderId)) {
-      setSelectedCryptoOrders((prevSelected) => [
-        ...prevSelected,
-        cryptoOrderId
-      ]);
-    } else {
-      setSelectedCryptoOrders((prevSelected) =>
-        prevSelected.filter((id) => id !== cryptoOrderId)
-      );
-    }
-  };
-
-  const handlePageChange = (event: any, newPage: number): void => {
-    setPage(newPage);
-  };
-
-  const handleLimitChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    setLimit(parseInt(event.target.value));
-  };
-
-  const filteredCryptoOrders = applyFilters(cryptoOrders, filters);
-  const paginatedCryptoOrders = applyPagination(
-    filteredCryptoOrders,
-    page,
-    limit
+  const list_of_type = useSelector(
+    (store: RootStore) => store.StockReducers?.fetchlistOfType
   );
-  const selectedSomeCryptoOrders =
-    selectedCryptoOrders.length > 0 &&
-    selectedCryptoOrders.length < cryptoOrders.length;
-  const selectedAllCryptoOrders =
-    selectedCryptoOrders.length === cryptoOrders.length;
-  const theme = useTheme();
+  const tabletitle = ['Product name','Description', 'Category', 'Price', 'Qty', 'Action'];
+  const tablecells = JSON.parse(JSON.stringify(stocks_by_business_table))?.map((value) =>[value.type_id,value.stock_id,value.prod_id,value.name,value.description,value.type_name,value.price,value.qty]);
 
+  const [values, setValues] = useState<editStocks>({
+    type_id:'',
+    stock_id: '',
+    prod_id: '',
+    name: '',
+    description: '',
+    type: '',
+    price: '',
+    qty: '',
+  });
+  const [focus, setFocus] = useState(false);
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef(null);
+  const dispatch =useTypedDispatch();
+  const handleChange =
+  (prop: keyof editStocks) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValues({ ...values, [prop]: event.target.value });
+    setFocus(true);
+  };
+  useEffect(() => {
+    if (focus) {
+      inputRef.current.focus();
+    }
+  }, [focus]);
+
+  const editProduct = useCallback(async (value) => {
+    setOpen(true);
+    await setValues({
+      type_id:'',
+      stock_id: '',
+      prod_id: '',
+      name: '',
+      description: '',
+      type:  '',
+      price: '',
+      qty:  '',
+    });
+    await setValues({
+        type_id: value[0],
+        stock_id: value[1],
+        prod_id: value[2],
+        name: value[3],
+        description: value[4],
+        type: value[5],
+        price:value[6],
+        qty: value[7],
+      });
+  },[focus,values]);
+  const handleSubmitNewProduct = useCallback(async () => {
+    const payload2: GetStockbyBusinessModel = {
+      bussiness_id: '4d0f8c29-c7d6-443d-8ba8-b5f0781e8e27',
+    };
+    if(values.name === '' || values.description === '' || values.type_id === '' || values.price==='' || values.qty === '')
+    {
+      const payloadAlertMessage: GetAlertModel = {
+        alertMessage: 'Please fill all required fields',
+        alertOpen:true,
+        typeOfAlert: 'warning'
+      };
+       dispatch(setAlertMessage(payloadAlertMessage));
+     
+      return;
+    }
+    if(values.prod_id === ''){
+      const payload: AddProductModel = {
+        name: values.name,
+        description: values.description,
+        type_of_prod_id: values.type_id,
+        bussiness_id: '4d0f8c29-c7d6-443d-8ba8-b5f0781e8e27',
+        price: values.price,
+        qty: values.qty,
+      };
+      const response = await AddNewProduct(payload);
+      
+      if (response?.success) {
+        await dispatch(fetchStocksByBusiness(payload2));
+        await setOpen(false);
+        await closeModal(false);
+        const payloadAlertMessage: GetAlertModel = {
+          	alertMessage: response.message.toString(),
+            alertOpen:true,
+            typeOfAlert: 'success'
+        };
+        await dispatch(setAlertMessage(payloadAlertMessage));
+
+      } else {
+        if (typeof response?.message === "string") {
+          const payloadAlertMessage: GetAlertModel = {
+          	alertMessage: response.message.toString(),
+            alertOpen:true,
+            typeOfAlert: 'error'
+        };
+        await dispatch(setAlertMessage(payloadAlertMessage));
+        }
+      }
+    }else {
+      if(values.stock_id === '' || values.prod_id === '' || values.name === '' || values.description === '' || values.type_id === '' || values.price==='' || values.qty === '')
+      {
+        const payloadAlertMessage: GetAlertModel = {
+          alertMessage: 'Please fill all required fields',
+          alertOpen:true,
+          typeOfAlert: 'warning'
+        };
+        await dispatch(setAlertMessage(payloadAlertMessage));
+       
+        return;
+      }
+      const payload: EditProductModel = {
+        stock_id: values.stock_id,
+        prod_id: values.prod_id,
+        name: values.name,
+        description: values.description,
+        type_of_prod_id: values.type_id,
+        bussiness_id: '4d0f8c29-c7d6-443d-8ba8-b5f0781e8e27',
+        price: values.price,
+        qty: values.qty,
+      };
+      const response = await EditProduct(payload);
+      
+      if (response?.success) {
+        const payloadAlertMessage: GetAlertModel = {
+          alertMessage: response?.message.toString(),
+          alertOpen:true,
+          typeOfAlert: 'success'
+        };
+        await dispatch(setAlertMessage(payloadAlertMessage));
+
+        await dispatch(fetchStocksByBusiness(payload2));
+        await setValues({
+          type_id:'',
+          stock_id: '',
+          prod_id: '',
+          name: '',
+          description: '',
+          type:  '',
+          price: '',
+          qty:  '',
+        });
+        await setOpen(false);
+        await closeModal(false);
+      } else {
+        if (typeof response?.message === "string") {
+          const payloadAlertMessage: GetAlertModel = {
+            alertMessage: 'Please fill all required fields',
+            alertOpen:true,
+            typeOfAlert: 'warning'
+          };
+          await dispatch(setAlertMessage(payloadAlertMessage));
+        }
+      }
+    }
+
+  
+  },[values,dispatch]);
+
+  useEffect(()=>{
+    if(addStock){
+       setValues({
+        type_id:'',
+        stock_id: '',
+        prod_id: '',
+        name: '',
+        description: '',
+        type:  '',
+        price: '',
+        qty:  '',
+      });
+      setOpen(true);
+    }
+  },[addStock]);
   return (
-    <Card>
-      {selectedBulkActions && (
-        <Box flex={1} p={2}>
-          <BulkActions />
-        </Box>
-      )}
-      {!selectedBulkActions && (
-        <CardHeader
-          action={
-            <Box width={150}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={filters.status || 'all'}
-                  onChange={handleStatusChange}
-                  label="Status"
-                  autoWidth
-                >
-                  {statusOptions.map((statusOption) => (
-                    <MenuItem key={statusOption.id} value={statusOption.id}>
-                      {statusOption.name}
-                    </MenuItem>
-                  ))}
-                </Select>
+    <>
+      <Grid container spacing={5}  justifyContent="center">
+        <CustomDialog 
+          Title={"Add new products"}
+          DialogBody={
+          <Grid container spacing={5}  justifyContent="center">
+          <Grid item xs={8}>
+          <Box
+            sx={{
+              '& .MuiTextField-root': { m: 2, width: '100%' }
+            }}
+            >
+            <div>
+              <TextField
+                required
+                label="Product Name"
+                disabled={Title?.name?.includes('Add') ? true : false}
+                 variant={focus || open? "outlined" : "standard"}
+                onChange={handleChange('name')}
+                value={values.name}
+                inputRef={inputRef}
+                FormHelperTextProps={{error:true}}
+                helperText="This is a required field"
+              />
+            </div>
+            <div>
+              <TextField
+                
+                label="Product Description"
+                disabled={Title?.name?.includes('Add') ? true : false}
+                variant={focus || open? "outlined" : "standard"}
+                onChange={handleChange('description')}
+                value={values.description}
+                inputRef={inputRef}
+              />
+            </div>
+            <div>
+            <FormControl sx={{ m: 2, width: '100%' }} size="medium">
+            <InputLabel id="demo-select-small">Product Type</InputLabel>
+            <Select
+                disabled={Title?.name?.includes('Add') ? true : false}
+                value={values?.type_id}
+                label="Product Type"
+                variant={focus || open? "outlined" : "standard"}
+                onChange={handleChange('type_id')}
+                inputRef={inputRef}
+                fullWidth
+              >
+                {
+                  JSON.parse(JSON.stringify(list_of_type))?.map((value)=>{
+                    return(
+                      <MenuItem key={value?.type_of_prod_id} value={value?.type_of_prod_id}>{value?.name}</MenuItem>
+                    )
+                
+                  })
+                }
+              </Select>
               </FormControl>
+              </div>
+            <div>
+              <TextField
+               FormHelperTextProps={{error:true}}
+               helperText="This is a required field"
+                required
+                label="Price"
+                variant={focus || open? "outlined" : "standard"}
+                onChange={handleChange('price')}
+                value={values.price}
+                inputRef={inputRef}
+              />
+            </div>
+            <div>
+              <TextField
+              FormHelperTextProps={{error:true}}
+               helperText="This is a required field"
+                required
+                label="Qty"
+                variant={focus || open? "outlined" : "standard"}
+                onChange={handleChange('qty')}
+                value={values.qty}
+                inputRef={inputRef}
+              />
+            </div>
             </Box>
-          }
-          title="Recent Orders"
-        />
-      )}
-      <Divider />
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  color="primary"
-                  checked={selectedAllCryptoOrders}
-                  indeterminate={selectedSomeCryptoOrders}
-                  onChange={handleSelectAllCryptoOrders}
-                />
-              </TableCell>
-              <TableCell>Order Details</TableCell>
-              <TableCell>Order ID</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell align="right">Amount</TableCell>
-              <TableCell align="right">Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedCryptoOrders.map((cryptoOrder) => {
-              const isCryptoOrderSelected = selectedCryptoOrders.includes(
-                cryptoOrder.id
-              );
-              return (
-                <TableRow
-                  hover
-                  key={cryptoOrder.id}
-                  selected={isCryptoOrderSelected}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      checked={isCryptoOrderSelected}
-                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                        handleSelectOneCryptoOrder(event, cryptoOrder.id)
-                      }
-                      value={isCryptoOrderSelected}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="text.primary"
-                      gutterBottom
-                      noWrap
-                    >
-                      {cryptoOrder.orderDetails}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {format(cryptoOrder.orderDate, 'MMMM dd yyyy')}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="text.primary"
-                      gutterBottom
-                      noWrap
-                    >
-                      {cryptoOrder.orderID}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="text.primary"
-                      gutterBottom
-                      noWrap
-                    >
-                      {cryptoOrder.sourceName}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {cryptoOrder.sourceDesc}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="text.primary"
-                      gutterBottom
-                      noWrap
-                    >
-                      {cryptoOrder.amountCrypto}
-                      {cryptoOrder.cryptoCurrency}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {numeral(cryptoOrder.amount).format(
-                        `${cryptoOrder.currency}0,0.00`
-                      )}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    {getStatusLabel(cryptoOrder.status)}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Edit Order" arrow>
-                      <IconButton
-                        sx={{
-                          '&:hover': {
-                            background: theme.colors.primary.lighter
-                          },
-                          color: theme.palette.primary.main
-                        }}
-                        color="inherit"
-                        size="small"
-                      >
-                        <EditTwoToneIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Order" arrow>
-                      <IconButton
-                        sx={{
-                          '&:hover': { background: theme.colors.error.lighter },
-                          color: theme.palette.error.main
-                        }}
-                        color="inherit"
-                        size="small"
-                      >
-                        <DeleteTwoToneIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Box p={2}>
-        <TablePagination
-          component="div"
-          count={filteredCryptoOrders.length}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleLimitChange}
-          page={page}
-          rowsPerPage={limit}
-          rowsPerPageOptions={[5, 10, 25, 30]}
-        />
-      </Box>
-    </Card>
+          </Grid>
+          </Grid>
+        } DialogFooter={ 
+      <Grid container justifyContent="center" alignItems="center">
+        <Grid item>
+          <Button
+            sx={{ mt: { xs: 2, md: 0 } }}
+            variant="contained"
+            startIcon={values.prod_id ===''? <AddCircleOutline fontSize="small" />  : <EditIcon fontSize="small" />}
+            onClick={() => handleSubmitNewProduct()}
+          >
+           {values.prod_id ===''?  "Add New Products" :  "Update Products"}
+          </Button>
+        </Grid>
+      </Grid>
+    }
+    openDialog={open} 
+    maxWidth={"sm"}
+    fullWidth={true}
+    closeDialog={(value)=> {setOpen(value); closeModal(value);}}
+    />
+ 
+      <Grid item xs={12}>
+        <CustomTable tableTitle={tabletitle} tableCells={tablecells} withActions={true} handleClickAction={(value)=>  editProduct(value)} tableValue={stocks_by_business_table}/>
+      </Grid>
+      
+      </Grid>
+    
+      </>
   );
 };
-
-RecentOrdersTable.propTypes = {
-  cryptoOrders: PropTypes.array.isRequired
-};
-
-RecentOrdersTable.defaultProps = {
-  cryptoOrders: []
-};
-
 export default RecentOrdersTable;
+
